@@ -1,1 +1,46 @@
-
+#begin script
+library(PBSddesolve)
+    # define the mortality rates   
+    d1= function(t) 5+ 0.25*sin(t)
+    d2=function(t) 4+0.5*cos(t)
+    # define the birth functions
+    b1=function(t) 1+0.5*cos(t)
+    b2=function(t) 1+0.25*sin(t)
+    # define the immigration terms
+    i1= function(t) 2+ 0.25*cos(t)
+    i2=function(t) 2 +0.5*sin(t)
+    # time interval
+    t0<- 0; t1<- 50; 
+    # create a function to return dde gradient
+    yprime <- function(t,y,parms) {
+      if (t < parms$tau)
+        lag <- parms$initial
+      else
+        lag <- pastvalue(t - parms$tau)
+      y1 <- - d1(t) *y[1]/(parms$c1+y[1]) + parms$a* b1(t)*lag[1]*exp(-lag[1])+i1(t) *y[2]/(parms$D1+y[2])
+      y2 <- - d2(t) *y[2]/(parms$c2+y[2]) + parms$b* b2(t)*lag[2]*exp(-lag[2])+i2(t) *y[1]/(parms$D2+y[1])
+      y3 <- - d1(t) *y[3]/(parms$c1+y[3]) + parms$a* b1(t)*lag[3]*exp(-lag[3])+i1(t) *y[4]/(parms$D1+y[4])
+      y4 <- - d2(t) *y[4]/(parms$c2+y[4]) + parms$b* b2(t)*lag[4]*exp(-lag[4])+i2(t) *y[3]/(parms$D2+y[3])
+      y5 <- - d1(t) *y[5]/(parms$c1+y[5]) + parms$a* b1(t)*lag[5]*exp(-lag[5])+i1(t) *y[6]/(parms$D1+y[6])
+      y6 <- - d2(t) *y[6]/(parms$c2+y[6]) + parms$b* b2(t)*lag[6]*exp(-lag[6])+i2(t) *y[5]/(parms$D2+y[5])
+            return(c(y1,y2,y3,y4,y5,y6))
+    }
+    # define initial values 
+    yinit <- c(1,1,2,1.5,0.8,0.8)
+    # parameters tau=7,  a=2, b=2
+      parms <- list(tau=7, c1=4, a=2, c2=4, b=2, c3=4, c=3, D1=2, D2=3, initial=yinit)
+    # solve the dde system
+      yout <- dde(y=yinit, func=yprime, parms=parms, times=seq(t0,t1,0.1), hbsize=1000)
+    # display the results
+    frame();
+    
+    plot(yout$time, yout$y1, type="l", col="black", lwd="1",  xlab="Time", ylab="Patch 1",
+    ylim=c(min(yout$y1, yout$y3, yout$y5), max(yout$y1, yout$y3, yout$y5)))
+    lines(yout$time, yout$y3, col="black", lty="dashed", lwd="1")
+    lines(yout$time, yout$y5, col="black", lty="dotted", lwd="1")
+    
+    plot(yout$time, yout$y2, type="l", col="black", lwd="1", xlab="Time", ylab="Patch 2",
+         ylim=c(min(yout$y2, yout$y4, yout$y6), max(yout$y2, yout$y4, yout$y6)))
+    lines(yout$time, yout$y4, col="black", lty="dashed",lwd="1")
+    lines(yout$time, yout$y6, col="black", lty="dotted",lwd="1")
+#end script
